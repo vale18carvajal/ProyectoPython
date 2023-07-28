@@ -35,12 +35,12 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
 
         self.btnFolder= self.findChild(QtWidgets.QPushButton, "btnCrearCarpeta")
         self.btnFolder.clicked.connect(self.crear_directorio)
-     
+    #El siguiente método es para crear una nueva carpeta 
     def crear_directorio(self):
         try:
-            self.newPath= os.path.join(self.ruta, "Esteban")
-            self.folder = os.makedirs(self.newPath, 0o666)
-        except FileExistsError:
+            self.newPath= os.path.join(self.ruta, "Carpetita") #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
+            self.folder = os.makedirs(self.newPath) #Creamos la carpeta con el método mkdirs() del módulo os con su número de modelo
+        except FileExistsError: #Se reconoce una excepeción el nombre de la carpeta ya existe
             self.mensaje_error_directorio()
             
 
