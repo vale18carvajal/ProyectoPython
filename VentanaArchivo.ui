@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>766</width>
-    <height>769</height>
+    <width>713</width>
+    <height>604</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,10 @@
   <widget class="QPlainTextEdit" name="txtCampoTexto">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>10</x>
      <y>40</y>
-     <width>761</width>
-     <height>731</height>
+     <width>691</width>
+     <height>541</height>
     </rect>
    </property>
    <property name="font">
