@@ -71,7 +71,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.texto = None
         
         self.btnFolder= self.findChild(QtWidgets.QPushButton, "btnCrearCarpeta")
-        self.btnFolder.clicked.connect(self.abrir_ventana)
+        self.btnFolder.clicked.connect(self.crear_directorio)
         
     def abrir_archivo(self,index):
         
