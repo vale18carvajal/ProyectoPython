@@ -40,38 +40,45 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
     def __init__(self) -> None:
         super(ExploradorDeArchivos,self).__init__()
         uic.load_ui.loadUi("UI_Explorador.ui", self)
-        self.ruta= os.path.dirname(__file__) + '\\Raiz'
-        #self.inicializarElementos()
-
-    #def inicializarElementos(self): #Método para inicializar los widgets
+        self.ruta= os.path.dirname(__file__) + '\\Raiz' #Creamos una ruta raiz que queremos mostrar en nuestra aplicación
+        
         #Creamos una variable Modelo en la cual vamos a instanciar la clase QFileSystemModel que
         #proporcional un modelo de datos para archvios locales
-        #self.ruta= 'c:\\Users\\valer\\OneDrive\\Documentos\\CISCO IT ESSENTIALS'
         self.modelo = QFileSystemModel()
         #Creamos una variable de ruta para guardar la ruta raíz que queremos mostrar en la ventana
         
-        #Seteamos la ruta raiz para mostrar en el QTreeView
+        #Establecemos la ruta raiz para mostrar en el QTreeView
         self.modelo.setRootPath(self.ruta)
-        
-        
-        
+        self.txtDir = self.findChild(QtWidgets.QLineEdit, "txtDirectorio")
+        self.txtDir.setText(self.ruta) #Inicialmente se mostrará la ruta raiz en la pantalla
+
         
         #Incializamos una variable de tipo QTreeView que se encuentra en al archivo .ui
         self.arbol = self.findChild(QtWidgets.QTreeView, "treeArbol")
+        
         #SetModel() es un método heredado de la clase "QAbstractItemModel Class" que proporciona una clase
         #abstracta para las clases de modelos de elemetnos. Como QTreeview es un elemento que requiere
         #items, podemos manipular su modelo de intem con la función setModel()
         self.arbol.setModel(self.modelo)
+        self.arbol.setColumnWidth(0, 250) #Expando la columna de nombre de archivos/directorios
         #Con setRootIndex() se establece el elemento de ruta raiz: https://doc.qt.io/qt-6/qabstractitemview.html#setRootIndex
         #Con el método index() de la clase QFileSystemModel retornar el item del modelo con la ruta establecida como ruta raíz
         self.arbol.setRootIndex(self.modelo.index(self.ruta))
         self.filtro()#
-
+        self.explorador_rapido()
         self.arbol.doubleClicked.connect(self.abrir_archivo)
         self.texto = None
         
         self.btnFolder= self.findChild(QtWidgets.QPushButton, "btnCrearCarpeta")
         self.btnFolder.clicked.connect(self.abrir_ventana)
+        
+    def explorador_rapido(self):
+        self.arbol2 = self.findChild(QtWidgets.QTreeView, "arbol2")
+        self.arbol2.setModel(self.modelo)
+        self.arbol2.setRootIndex(self.modelo.index(self.ruta))
+        self.arbol2.hideColumn(1)
+        self.arbol2.hideColumn(2)
+        self.arbol2.hideColumn(3)
         
     def abrir_archivo(self,index):
         
@@ -91,14 +98,14 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
             archivo.close()
             
     
-    def filtro(self):
-        filtro = ["*.txt"]#
-        self.modelo.setNameFilters(filtro)#
-        self.modelo.setNameFilterDisables(False)#
+    def filtro(self):#Con este método filtramos solo archivos .txt aparezcan
+        filtro = ["*.txt"]#Tipo de archivo con extensión .txt que deseamos mostrar, en formato lista
+        self.modelo.setNameFilters(filtro)#Añadimos el fltro recibido como lista
+        self.modelo.setNameFilterDisables(False)#Activamos el filro
     
-    def crear_directorio(self):#Este método es para crear una nueva carpeta
+    def crear_directorio(self,nombre):#Este método es para crear una nueva carpeta
         try:
-            self.newPath= os.path.join(self.ruta, "Carpeta") #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
+            self.newPath= os.path.join(self.ruta, nombre) #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
             self.folder = os.makedirs(self.newPath) #Creamos la carpeta con el método mkdirs() del módulo os con su número de modelo
         except FileExistsError: #Se reconoce una excepeción el nombre de la carpeta ya existe
             self.mensaje_error_directorio()
@@ -108,12 +115,12 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         mensaje = QtWidgets.QMessageBox(self)
         mensaje.setWindowTitle("Error")
         mensaje.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-        mensaje.setText("Nombre de carpeta existente")
+        mensaje.setText("Nombre de carpeta ya existe")
         mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         mensaje.exec()
 
     def abrir_ventana(self):
-        NuevoDirectorio().exec()
+        NuevoDirectorio().exec() #Método para abrir ventana para estabelecer nombre al nuevo directorio
 
 class NuevoDirectorio(QtWidgets.QDialog):
     def __init__(self) -> None:
@@ -123,14 +130,30 @@ class NuevoDirectorio(QtWidgets.QDialog):
         self.btnCancelar = self.findChild(QtWidgets.QPushButton, "btnCancelar")
         self.btnSiguiente = self.findChild(QtWidgets.QPushButton, "btnSiguiente")
         
+        
         self.btnSiguiente.clicked.connect(self.generarNombre)
+        
         
     def generarNombre(self):
         nombre = self.cajaTexto.text()
-        if ((nombre !="") or not(nombre.isspace)):
-            ExploradorDeArchivos.crear_directorio()
-        
-            NuevoDirectorio.close()
+        try:
+            assert nombre != ""
+            assert nombre.find(" ") != 0
+            ExploradorDeArchivos
+            crear = ExploradorDeArchivos()
+            crear.crear_directorio(nombre)
+            self.close()
+        except AssertionError:
+            self.mensaje_error_al_crear()
+            
+    def mensaje_error_al_crear(self):
+        mensaje = QtWidgets.QMessageBox(self)
+        mensaje.setWindowTitle("Error")
+        mensaje.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+        mensaje.setText("Nombre no válido")
+        mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        mensaje.exec()        
+            
                
 def main():
     app = QApplication(sys.argv)
