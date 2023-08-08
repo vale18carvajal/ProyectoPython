@@ -1,0 +1,17 @@
+El dia de hoy realice los siguientes avances:
+-Los arboles ya se encuentran como metodos, por lo tanto, manipular el arbol grande es mas facil.
+-Cambie un poco el metodo del filtro por lo siguiente.
+El arbolo1 (en que se encuentra en la izquierda) solo debe mostrar carpetas como en windows y no archivos
+El arbol2, debe filtrar archivos planos nada mas.
+Por lo tanto, el metodo de filtro ahora funciona con parametros.
+-Los arboles ahora manejan dos variables modelo distintas, porque sus filtros son diferentes.
+-Cree los metodos:
+	explorador_secundario(): donde se inicializa el arbol2 (arbol derecho) y se puede manipular, donde 	la ruta por default es la ruta raiz (parametro establecido) pero se puede cambiar(se puede 	establecer otro parametro no default).
+	
+	actualizar_explorador_secundario(): Para obtener la ruta de la carpeta seleccionada y cambiar la 	ruta del arbol2 y llamar al metodo explorador_secundario() 
+	
+
+-Al darle clik a alguna carpeta del arbol izquierdo (arbol1) se cambia la ruta del arbol derecho (arbol2).
+-Al darle doble click a alguna carpeta del arbol2, se cambia su ruta
+-Estbleci un boton de reiniciar para establecer la ruta default del arbol2 (ruta raiz inicial)
+-Establecí iconos desde el QTDesigner

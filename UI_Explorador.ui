@@ -147,7 +147,11 @@
     </rect>
    </property>
    <property name="text">
-    <string>B</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>Iconos/Search.png</normaloff>Iconos/Search.png</iconset>
    </property>
   </widget>
   <widget class="QWidget" name="verticalLayoutWidget_3">
@@ -170,6 +174,23 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="btnReiniciar">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>20</y>
+     <width>41</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>Iconos/Reload.png</normaloff>Iconos/Reload.png</iconset>
+   </property>
   </widget>
  </widget>
  <resources/>

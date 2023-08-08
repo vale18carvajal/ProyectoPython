@@ -42,7 +42,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../../Downloads/save.png</normaloff>../../Downloads/save.png</iconset>
+     <normaloff>Iconos/save.png</normaloff>Iconos/save.png</iconset>
    </property>
   </widget>
   <widget class="Line" name="line">
@@ -72,24 +72,24 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../../Downloads/eraser.png</normaloff>../../Downloads/eraser.png</iconset>
+     <normaloff>Iconos/eraser.png</normaloff>Iconos/eraser.png</iconset>
    </property>
   </widget>
-  <widget class="QPushButton" name="btnPrivado">
+  <widget class="QCheckBox" name="checkBox">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>560</x>
      <y>10</y>
-     <width>31</width>
-     <height>24</height>
+     <width>141</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>Añadir Seguridad</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../../Downloads/padlock.png</normaloff>../../Downloads/padlock.png</iconset>
+     <normaloff>Iconos/padlock.png</normaloff>Iconos/padlock.png</iconset>
    </property>
   </widget>
  </widget>
