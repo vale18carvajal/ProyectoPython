@@ -41,9 +41,6 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         super(ExploradorDeArchivos,self).__init__()
         uic.load_ui.loadUi("UI_Explorador.ui", self)
         self.ruta= os.path.dirname(__file__) + '\\Raiz' #Creamos una ruta raiz que queremos mostrar en nuestra aplicación
-        
-        
-        
         self.explorador_rapido()
         self.explorador_secundario()
         self.arbol.clicked.connect(self.actualizar_explorador_secundario)
@@ -52,7 +49,12 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         
         self.btnFolder= self.findChild(QtWidgets.QPushButton, "btnCrearCarpeta")
         self.btnFolder.clicked.connect(self.abrir_ventana)
-        self.btnReinic= self.findChild(QtWidgets.QPushButton, "btnReiniciar")
+        self.btnReini = self.findChild(QtWidgets.QPushButton,"btnReiniciar")
+        self.btnReini.clicked.connect(self.reiciar_vista)
+        #self.btnFolder= self.findChild(QtWidgets.QPushButton, "btnCrearArchivo")
+        #self.btnFolder.clicked.connect(self.abrir_ventana)
+        
+        
         
      
     def explorador_rapido(self):
@@ -100,6 +102,9 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
     def actualizar_explorador_secundario(self, index):
         ruta_nueva= self.modelo2.filePath(index)
         self.explorador_secundario(ruta_nueva)
+        
+    def reiciar_vista(self):
+        self.explorador_rapido(self.ruta)
     
     def abrir_directorio(self,index):
         
@@ -126,14 +131,23 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         model.setNameFilters(filtro)#Añadimos el fltro recibido como lista
         model.setNameFilterDisables(False)#Activamos el filro
     
-    def crear_directorio(self,nombre):#Este método es para crear una nueva carpeta
+    def crear_directorio(self,ruta_actual,nombre):#Este método es para crear una nueva carpeta
         try:
-            self.newPath= os.path.join(self.txtDir.text(), nombre) #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
-            print("cuadro: " ,self.txtDir.text())
-            print("path: " ,self.modelo2.rootPath())
-            self.folder = os.makedirs(self.newPath) #Creamos la carpeta con el método mkdirs() del módulo os con su número de modelo
+           
+            self.newPath= os.path.join(ruta_actual, nombre) #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
+            #print("cuadro: " ,self.txtDir.text())
+            #print("path: " ,self.modelo2.rootPath())
+            os.makedirs(self.newPath) #Creamos la carpeta con el método mkdirs() del módulo os con su número de modelo
+            #self.explorador_secundario(self.newPath)
         except FileExistsError: #Se reconoce una excepeción el nombre de la carpeta ya existe
             self.mensaje_error_directorio()
+            
+    def crear_archivo(self,ruta_actual,nombre):
+        try:
+            self.newPath= os.path.join(ruta_actual, nombre)
+            open()
+        except FileExistsError: #Se reconoce una excepeción el nombre de la carpeta ya existe
+            self.mensaje_error_directorio()      
             
     def mensaje_error_directorio(self):
         mensaje = QtWidgets.QMessageBox(self)
@@ -144,11 +158,13 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         mensaje.exec()
 
     def abrir_ventana(self):
-        NuevoDirectorio().exec() #Método para abrir ventana para estabelecer nombre al nuevo directorio
-
+        #NuevoDirectorio().exec() #Método para abrir ventana para estabelecer nombre al nuevo directorio
+        nuevo_directorio_dialog = NuevoDirectorio(self)
+        nuevo_directorio_dialog.exec()
+        
 class NuevoDirectorio(QtWidgets.QDialog):
-    def __init__(self) -> None:
-        super(NuevoDirectorio,self).__init__()
+    def __init__(self,parent=None) -> None:
+        super(NuevoDirectorio,self).__init__(parent)
         uic.load_ui.loadUi("NuevoDirectorio.ui", self)
         self.cajaTexto = self.findChild(QtWidgets.QLineEdit, "txtNombreDir")
         self.btnCancelar = self.findChild(QtWidgets.QPushButton, "btnCancelar")
@@ -163,10 +179,15 @@ class NuevoDirectorio(QtWidgets.QDialog):
         try:
             assert nombre != ""
             assert nombre.find(" ") != 0
-            ExploradorDeArchivos
-            crear = ExploradorDeArchivos()
-            crear.crear_directorio(nombre)
-            self.close()
+            #ExploradorDeArchivos
+            #crear = ExploradorDeArchivos()
+            #crear.crear_directorio(nombre)
+            #self.close()
+            if isinstance(self.parent(), ExploradorDeArchivos):  # Check if the parent is of the right class
+                explorador = self.parent()
+                explorador.crear_directorio(explorador.txtDir.text(), nombre)
+                self.close()
+
         except AssertionError:
             self.mensaje_error_al_crear()
             
@@ -177,7 +198,43 @@ class NuevoDirectorio(QtWidgets.QDialog):
         mensaje.setText("Nombre no válido")
         mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         mensaje.exec()        
+
+class NuevoArchivo(QtWidgets.QDialog):
+    def __init__(self,parent=None) -> None:
+        super(NuevoDirectorio,self).__init__(parent)
+        uic.load_ui.loadUi("NuevoDirectorio.ui", self)
+        self.cajaTexto = self.findChild(QtWidgets.QLineEdit, "txtNombreDir")
+        self.btnCancelar = self.findChild(QtWidgets.QPushButton, "btnCancelar")
+        self.btnSiguiente = self.findChild(QtWidgets.QPushButton, "btnSiguiente")
+        
+        
+        self.btnSiguiente.clicked.connect(self.generarNombre)
+        
+        
+    def generarNombre(self):
+        nombre = self.cajaTexto.text()
+        try:
+            assert nombre != ""
+            assert nombre.find(" ") != 0
+            #ExploradorDeArchivos
+            #crear = ExploradorDeArchivos()
+            #crear.crear_directorio(nombre)
+            #self.close()
+            if isinstance(self.parent(), ExploradorDeArchivos):  # Check if the parent is of the right class
+                explorador = self.parent()
+                explorador.crear_archivo(explorador.txtDir.text(), nombre)
+                self.close()
+
+        except AssertionError:
+            self.mensaje_error_al_crear()
             
+    def mensaje_error_al_crear(self):
+        mensaje = QtWidgets.QMessageBox(self)
+        mensaje.setWindowTitle("Error")
+        mensaje.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+        mensaje.setText("Nombre no válido")
+        mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        mensaje.exec()                
                
 def main():
     app = QApplication(sys.argv)
