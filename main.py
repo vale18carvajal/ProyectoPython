@@ -113,6 +113,32 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.txtDir = self.findChild(QtWidgets.QLineEdit, "txtDirectorio")
         self.txtDir.setText(ruta_2) #Inicialmente se mostrará la ruta raiz en la pantalla
         self.filtro(self.modelo2,"*.txt")#
+        
+        self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
+        self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
+
+    #Función para mostrar el menú emergente
+    def mostrar_menu(self, point): # esta es la funcion que maneja el menú contextual
+        try: 
+            index = self.arbol2.indexAt(point)
+            selected_path = str(self.arbol2.model().filePath(index))
+            print(selected_path)
+            menu_vista = QtWidgets.QMenu(self) # aqui se crea un una variable el objeto QMenu
+            accion_1 = menu_vista.addAction("Crear Carpeta")  # aquí se van agregando en una variable las acciones deseadas del menu para posteriormente utilizarlas con los metodos que queramos
+            accion_2 = menu_vista.addAction("Borrar Carpeta")
+            accion_3 = menu_vista.addAction("Crear Archivo")
+            accion_4 = menu_vista.addAction("Borrar Archivo")
+            
+            menu_vista.exec(self.arbol2.mapToGlobal(point))
+       
+            accion_1.triggered.connect(self.abrir_ventana) # aqui se conectan las acciones a las funciones correspondientes llamando a los metodos que les asignamos 
+            #accion_2.triggered.connect(self.borrar_Carp)
+            accion_3.triggered.connect(self.abrir_ventana_archivo)
+            accion_4.triggered.connect(self.borrar_directorio(selected_path))
+
+        except BaseException:
+            pass
+    
     
     #Función para actualizar el explorador secundario al hacer click en una carpeta    
     def actualizar_explorador_secundario(self, index):
@@ -143,6 +169,23 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
             pass
         except BaseException:
             archivo.close()          
+    
+    def borrar_directorio(self,ruta):
+        try:
+         
+            if os.path.isfile(ruta):
+                os.remove(ruta)
+      
+           # self.explorador_secundario(self.txtDir.text())
+
+        except OSError:
+            print("El archivo no se pudo abrir \n", OSError.strerror) #Mandamos un mensaje en consola e imprimimos el detalle del error
+            #archivo.close()
+        except UnboundLocalError: #Error al abrir una carpeta como si duera archivo
+            print("ERROR1")
+            
+        
+    
     
     #Función para filtrar los archivos que se muestran en el explorador (solo carpetas en el árbol1 y archivos txt en árbol2)
     def filtro(self, model, tipo):
