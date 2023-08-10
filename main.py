@@ -1,6 +1,6 @@
 import sys
 import typing
-import os
+import os,shutil
 
 from PyQt6 import QtCore, QtWidgets, uic
 from PyQt6.QtWidgets import QWidget, QApplication
@@ -8,7 +8,7 @@ from PyQt6.QtGui import QFileSystemModel
 #Clase para la ventana de edición de archivo
 class ventanaArchivo(QtWidgets.QDialog):
     
-    def __init__(self,textoArchivo="") -> None:
+    def __init__(self,ruta, textoArchivo="") -> None:
         super(ventanaArchivo,self).__init__()
         
         #Cargar la interfaz de usuario desde un archivo .ui
@@ -24,15 +24,17 @@ class ventanaArchivo(QtWidgets.QDialog):
         self.botonBorrar.clicked.connect(self.borrar_texto)
         self.botonGuardar.clicked.connect(self.guardarArchivo)
         
+        #Ruta de archivo a editar
+        self.rutaArchivo = ruta
+        
         #Establecer el texto inicial del campo de edición
         self.txtCampo.setPlainText(textoArchivo)
         
-        
     def guardarArchivo(self):
         try:
-            #Abrir el archivo en modo append y escribir el contenido en el campo de texto
-            fichero=open(os.path.join(self.ui_path, "Archivo.txt"),'a')
-            txt = self.txtCampo.toPlainText() + "\r"
+            #Abrir el archivo en modo write para sobreescribir en él si hay cambios nuevos
+            fichero=open(self.rutaArchivo,'w')
+            txt = self.txtCampo.toPlainText() #+ "\r"
             fichero.write(txt)
             fichero.close()
         except OSError:
@@ -56,7 +58,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.arbol2.doubleClicked.connect(self.abrir_directorio)
         self.texto = None
         
-        #Flag para inidicar si se está crando un archivo //
+        #Flag para inidicar si se está creando un archivo //
         self.creating_file= False
         
         #Conectar botones a funciones
@@ -66,10 +68,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.btnFolder.clicked.connect(self.abrir_ventana_archivo)
         self.btnReini = self.findChild(QtWidgets.QPushButton,"btnReiniciar")
         self.btnReini.clicked.connect(self.reiniciar_vista)
-        
-        
-        
-        
+
     #Función para configurar el explorador rápido (árbol izquierdo)
     def explorador_rapido(self):
         #Creamos una variable Modelo en la cual vamos a instanciar la clase QFileSystemModel que
@@ -122,23 +121,21 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         try: 
             index = self.arbol2.indexAt(point)
             selected_path = str(self.arbol2.model().filePath(index))
-            print(selected_path)
+     
             menu_vista = QtWidgets.QMenu(self) # aqui se crea un una variable el objeto QMenu
             accion_1 = menu_vista.addAction("Crear Carpeta")  # aquí se van agregando en una variable las acciones deseadas del menu para posteriormente utilizarlas con los metodos que queramos
-            accion_2 = menu_vista.addAction("Borrar Carpeta")
-            accion_3 = menu_vista.addAction("Crear Archivo")
-            accion_4 = menu_vista.addAction("Borrar Archivo")
-            
-            menu_vista.exec(self.arbol2.mapToGlobal(point))
-       
+            accion_2 = menu_vista.addAction("Crear Archivo")
+            accion_3 = menu_vista.addAction("Borrar")
+   
+            #Metodos a acceder según la acción
             accion_1.triggered.connect(self.abrir_ventana) # aqui se conectan las acciones a las funciones correspondientes llamando a los metodos que les asignamos 
-            #accion_2.triggered.connect(self.borrar_Carp)
-            accion_3.triggered.connect(self.abrir_ventana_archivo)
-            accion_4.triggered.connect(self.borrar_directorio(selected_path))
+            accion_2.triggered.connect(self.abrir_ventana_archivo)
+            accion_3.triggered.connect(lambda: self.borrar_directorio(selected_path)) 
 
+            menu_vista.exec(self.arbol2.mapToGlobal(point))
+            menu_vista.close() # Una vez elegida la opción cerramos el menú
         except BaseException:
-            pass
-    
+          print("Error de señal")
     
     #Función para actualizar el explorador secundario al hacer click en una carpeta    
     def actualizar_explorador_secundario(self, index):
@@ -153,14 +150,14 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
     def abrir_directorio(self,index):
         
         try:
-            ruta_nueva = self.modelo2.filePath(index)
-            if os.path.isfile(ruta_nueva):
-                archivo = open(self.modelo2.filePath(index), 'r')#Agarrro la ruta del directorio que le di doble click
+            ruta = self.modelo2.filePath(index)
+            if os.path.isfile(ruta):
+                archivo = open(ruta, 'r')#Agarrro la ruta del directorio que le di doble click
                 texto= archivo.read()
                 archivo.close()
-                ventanaArchivo(texto).exec()
+                ventanaArchivo(ruta,texto).exec()
             else:
-                self.explorador_secundario(ruta_nueva)
+                self.explorador_secundario(ruta)
 
         except OSError:
             print("El archivo no se pudo abrir \n", OSError.strerror) #Mandamos un mensaje en consola e imprimimos el detalle del error
@@ -170,30 +167,29 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         except BaseException:
             archivo.close()          
     
+    #Función para borrar archivos o carpetas
     def borrar_directorio(self,ruta):
         try:
          
             if os.path.isfile(ruta):
                 os.remove(ruta)
-      
-           # self.explorador_secundario(self.txtDir.text())
+            elif os.path.isdir(ruta):
+                shutil.rmtree(ruta)
+                
 
         except OSError:
-            print("El archivo no se pudo abrir \n", OSError.strerror) #Mandamos un mensaje en consola e imprimimos el detalle del error
+            print("Error al borrar el directorio \n", OSError.strerror) #Mandamos un mensaje en consola e imprimimos el detalle del error
             #archivo.close()
         except UnboundLocalError: #Error al abrir una carpeta como si duera archivo
             print("ERROR1")
             
-        
-    
-    
     #Función para filtrar los archivos que se muestran en el explorador (solo carpetas en el árbol1 y archivos txt en árbol2)
     def filtro(self, model, tipo):
         filtro = [tipo]#Tipo de directorio
         model.setNameFilters(filtro)#Añadimos el fltro recibido como lista
         model.setNameFilterDisables(False)#Activamos el filro
     
-    def crear_directorio(self,ruta_actual,nombre):#Este método es para crear una nueva carpeta
+    def crear_directorio(self,ruta_actual,nombre):#NO#Este método es para crear una nueva carpeta
         try:
            
             self.newPath= os.path.join(ruta_actual, nombre) #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
@@ -258,11 +254,6 @@ class NuevoDirectorio(QtWidgets.QDialog):
         try:
             assert nombre != ""
             assert nombre.find(" ") != 0
-            #ExploradorDeArchivos
-            #crear = ExploradorDeArchivos()
-            #crear.crear_directorio(nombre)
-            #self.close()
-            
             if isinstance(self.parent(), ExploradorDeArchivos):  # Check if the parent is of the right class
                 explorador = self.parent()
                 explorador.crear_elemento(explorador.txtDir.text(), nombre)
