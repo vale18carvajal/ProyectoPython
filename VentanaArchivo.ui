@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Editor de Archivo</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Iconos/LOGO.png</normaloff>Iconos/LOGO.png</iconset>
   </property>
   <widget class="QPlainTextEdit" name="txtCampoTexto">
    <property name="geometry">

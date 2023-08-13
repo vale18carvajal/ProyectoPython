@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Explorador de Archivos</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Iconos/LOGO.png</normaloff>Iconos/LOGO.png</iconset>
+  </property>
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
@@ -189,7 +193,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>Iconos/Reload.png</normaloff>Iconos/Reload.png</iconset>
+     <normaloff>Iconos/Home.png</normaloff>Iconos/Home.png</iconset>
    </property>
   </widget>
  </widget>

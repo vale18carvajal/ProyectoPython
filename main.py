@@ -68,6 +68,11 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.btnFolder.clicked.connect(self.abrir_ventana_archivo)
         self.btnReini = self.findChild(QtWidgets.QPushButton,"btnReiniciar")
         self.btnReini.clicked.connect(self.reiniciar_vista)
+        
+        self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
+        self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
+        #self.arbol.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
+        #self.arbol.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
 
     #Función para configurar el explorador rápido (árbol izquierdo)
     def explorador_rapido(self):
@@ -113,15 +118,15 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.txtDir.setText(ruta_2) #Inicialmente se mostrará la ruta raiz en la pantalla
         self.filtro(self.modelo2,"*.txt")#
         
-        self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
-        self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
+        #self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
+        #self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
 
     #Función para mostrar el menú emergente
     def mostrar_menu(self, point): # esta es la funcion que maneja el menú contextual
         try: 
             index = self.arbol2.indexAt(point)
             selected_path = str(self.arbol2.model().filePath(index))
-     
+            
             menu_vista = QtWidgets.QMenu(self) # aqui se crea un una variable el objeto QMenu
             accion_1 = menu_vista.addAction("Crear Carpeta")  # aquí se van agregando en una variable las acciones deseadas del menu para posteriormente utilizarlas con los metodos que queramos
             accion_2 = menu_vista.addAction("Crear Archivo")
@@ -133,6 +138,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
             accion_3.triggered.connect(lambda: self.borrar_directorio(selected_path)) 
 
             menu_vista.exec(self.arbol2.mapToGlobal(point))
+            menu_vista.exec(self.arbol.mapToGlobal(point))
             menu_vista.close() # Una vez elegida la opción cerramos el menú
         except BaseException:
           print("Error de señal")

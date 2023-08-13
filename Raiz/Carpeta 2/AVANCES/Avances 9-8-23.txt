@@ -1,0 +1,9 @@
+En los avances de hoy se logro lo siguiente:
+Crear la funcion de borrar directorios
+Establecer el manual emergente en el arbol secundario
+Establecer las funciones de crear carpetas, crear archivos y borrar en el menu
+Manejor de archivos (edición y guardado)
+
+Pendiente:
+Establecer la búsqueda de directorios
+Establecerle la seguridad a los archivos

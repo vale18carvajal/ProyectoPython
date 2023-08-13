@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Crear Nombre</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Iconos/LOGO.png</normaloff>Iconos/LOGO.png</iconset>
   </property>
   <widget class="QLineEdit" name="txtNombreDir">
    <property name="geometry">
