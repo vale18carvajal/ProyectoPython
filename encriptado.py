@@ -49,7 +49,6 @@ class cifrado_archivos():
         
             with open(archivo,"wb") as file: #aqui guardamos nuevamente los archivos pero con los datos ya encriptados, esto se hace abriendo el archivo en modo escritura binaria # se le asigna a una variable para poder utilizarlo
                 file.write(self.FIRMA +  datos_encriptados)# lo almacenamos con el metodo write y luego le agragamos una firma al principio del archivo encriptado para mas adelante poder saber si esta o no encriotado
-            print("Sí se ejecuta")
             mensaje = QtWidgets.QMessageBox()
             mensaje.setIcon(QtWidgets.QMessageBox.Icon.Information)
             mensaje.setWindowTitle("Aviso")

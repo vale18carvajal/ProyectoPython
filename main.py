@@ -6,13 +6,8 @@ from PyQt6 import QtCore, QtWidgets, uic, QtGui
 from PyQt6.QtWidgets import QWidget, QApplication
 from PyQt6.QtGui import QFileSystemModel
 
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from base64 import urlsafe_b64encode
-
 import encriptado as crypt
+import buscarArchivos as buscar
 
 #Clase para la ventana de edición de archivo
 class ventanaArchivo(QtWidgets.QDialog):
@@ -77,7 +72,10 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.btnFolder.clicked.connect(self.abrir_ventana_archivo)
         self.btnReini = self.findChild(QtWidgets.QPushButton,"btnReiniciar")
         self.btnReini.clicked.connect(self.reiniciar_vista)
-        
+        self.btnBuscar = self.findChild(QtWidgets.QPushButton,"btnBuscar")
+        self.btnBuscar.clicked.connect(self.encontrar)
+        self.txtBuscar = self.findChild(QtWidgets.QLineEdit,"txtBusqueda")
+
         #Varibles del encriptado de archivos
         self.FIRMA = b"ENCRIPTADO" # AGREGAR ESTO
         
@@ -143,6 +141,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
     #Función que reinicia la vista a la ruta raíz | Llama al explorador secundario con la ruta raíz    
     def reiniciar_vista(self):
         self.explorador_secundario(self.ruta)
+        self.txtBuscar.setText("")
     
     #Función para abrir un archivo o un directorio en la ventana de edición
     def abrir_directorio(self,index):
@@ -164,6 +163,17 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
             pass
         except BaseException:
             archivo.close()   
+    
+    def encontrar(self): # AGREGAR ESTO 
+        txt = self.txtBuscar.text() #aqui asignamos en una variable la palabra que pase el usuario para buscar
+        mod= buscar.Rutas()
+        mod.recorrer_directorios(self.ruta) # llamamos al metodo y le pasamos la ruta con la que va a interactuar
+        lista = mod.buscarArchivo(txt)
+        encontrado=mod.respuesta(lista)
+        if encontrado != None: #Si lo buscado no existe, no quiero que se actualice la ventana
+            self.explorador_secundario(encontrado)
+        else: 
+            self.txtBuscar.setText("")
                
     #Función para mostrar tipo de menú
     def verificar_menu_directorio(self,point): #esto es una prueba
