@@ -4,7 +4,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from base64 import urlsafe_b64encode
 from PyQt6 import QtCore, QtWidgets, uic, QtGui
-import main as m
+
 class cifrado_archivos():
     def __init__(self) -> None:
         super(cifrado_archivos,self).__init__()
@@ -57,7 +57,6 @@ class cifrado_archivos():
             mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             mensaje.exec()    
     
-    
     #Función de decifrado  
     def desencriptar_archivo(self,archivo,clave):
         if self.verificar_encriptado(archivo):# aqui perguntamos si el archivo esta desencriptado, si lo está mandamos un mensaje de alerta y si no ejecutamos el metodo
@@ -97,8 +96,6 @@ class cifrado_archivos():
             firma = f.read(len(self.FIRMA))
         return firma == self.FIRMA # aqui lo compara con la firma y si son iguales devueve true de lo contrario devuelve false
        
-
-
 
 if __name__ == "__main__":
     print("Este módulo no debe ser ejecutado como main :)")
