@@ -2,9 +2,18 @@ import sys
 import typing
 import os,shutil
 
-from PyQt6 import QtCore, QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic, QtGui
 from PyQt6.QtWidgets import QWidget, QApplication
 from PyQt6.QtGui import QFileSystemModel
+
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from base64 import urlsafe_b64encode
+
+import encriptado as crypt
+
 #Clase para la ventana de edición de archivo
 class ventanaArchivo(QtWidgets.QDialog):
     
@@ -69,11 +78,16 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.btnReini = self.findChild(QtWidgets.QPushButton,"btnReiniciar")
         self.btnReini.clicked.connect(self.reiniciar_vista)
         
+        #Varibles del encriptado de archivos
+        self.FIRMA = b"ENCRIPTADO" # AGREGAR ESTO
+        
         self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
-        self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
+        self.arbol2.customContextMenuRequested.connect(self.verificar_menu_directorio) #Mostrar el menu con click derecho
         #self.arbol.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
         #self.arbol.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
 
+        
+        
     #Función para configurar el explorador rápido (árbol izquierdo)
     def explorador_rapido(self):
         #Creamos una variable Modelo en la cual vamos a instanciar la clase QFileSystemModel que
@@ -121,33 +135,11 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         #self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
         #self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
 
-    #Función para mostrar el menú emergente
-    def mostrar_menu(self, point): # esta es la funcion que maneja el menú contextual
-        try: 
-            index = self.arbol2.indexAt(point)
-            selected_path = str(self.arbol2.model().filePath(index))
-            
-            menu_vista = QtWidgets.QMenu(self) # aqui se crea un una variable el objeto QMenu
-            accion_1 = menu_vista.addAction("Crear Carpeta")  # aquí se van agregando en una variable las acciones deseadas del menu para posteriormente utilizarlas con los metodos que queramos
-            accion_2 = menu_vista.addAction("Crear Archivo")
-            accion_3 = menu_vista.addAction("Borrar")
-   
-            #Metodos a acceder según la acción
-            accion_1.triggered.connect(self.abrir_ventana) # aqui se conectan las acciones a las funciones correspondientes llamando a los metodos que les asignamos 
-            accion_2.triggered.connect(self.abrir_ventana_archivo)
-            accion_3.triggered.connect(lambda: self.borrar_directorio(selected_path)) 
-
-            menu_vista.exec(self.arbol2.mapToGlobal(point))
-            menu_vista.exec(self.arbol.mapToGlobal(point))
-            menu_vista.close() # Una vez elegida la opción cerramos el menú
-        except BaseException:
-          print("Error de señal")
-    
     #Función para actualizar el explorador secundario al hacer click en una carpeta    
     def actualizar_explorador_secundario(self, index):
         ruta_nueva= self.modelo2.filePath(index)
         self.explorador_secundario(ruta_nueva)
-     
+
     #Función que reinicia la vista a la ruta raíz | Llama al explorador secundario con la ruta raíz    
     def reiniciar_vista(self):
         self.explorador_secundario(self.ruta)
@@ -171,18 +163,73 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         except UnboundLocalError: #Error al abrir una carpeta como si duera archivo
             pass
         except BaseException:
-            archivo.close()          
+            archivo.close()   
+               
+    #Función para mostrar tipo de menú
+    def verificar_menu_directorio(self,point): #esto es una prueba
+        index = self.arbol2.indexAt(point)
+        selected_path = str(self.arbol2.model().filePath(index))
+        if os.path.isfile(selected_path):
+            self.mostrar_menu_archivo(point) 
+        elif os.path.isdir(selected_path):
+            self.mostrar_menu_general(point)
+        else:
+            self.mostrar_menu_general(point)
+            
+    #Función para mostrar el menú emergente general
+    def mostrar_menu_general(self, point): # esta es la funcion que maneja el menú contextual
+        try: 
+            index = self.arbol2.indexAt(point)
+            selected_path = str(self.arbol2.model().filePath(index)) #Seleccionamos la ruta de la elección
+            
+            #Dirección del mouse y del menú
+            pos_raton = QtGui.QCursor.pos() #  aqui obtenemos la posicion globlal del raton gracias al modulo QCursor de la libreria QtGui para poder aujustarla segun sea necesario
+            pos_menu  = QtCore.QPoint(pos_raton.x() + 10,pos_raton.y() + 0) #aqui ajustamos la posicion del menu 10 pixeles a la derecha del raton que en este caso seria X y 0 pexeles hacia abajo
+            
+            menu_vista = QtWidgets.QMenu(self) # aqui se crea un una variable el objeto QMenu
+            accion_1 = menu_vista.addAction("Crear Carpeta")  # aquí se van agregando en una variable las acciones deseadas del menu para posteriormente utilizarlas con los metodos que queramos
+            accion_2 = menu_vista.addAction("Crear Archivo")
+            accion_3 = menu_vista.addAction("Borrar")
+   
+            #Metodos a acceder según la acción
+            accion_1.triggered.connect(self.abrir_ventana) # aqui se conectan las acciones a las funciones correspondientes llamando a los metodos que les asignamos 
+            accion_2.triggered.connect(self.abrir_ventana_archivo)
+            accion_3.triggered.connect(lambda: self.borrar_directorio(selected_path)) 
+
+            menu_vista.exec(pos_menu)
+            menu_vista.close() # Una vez elegida la opción cerramos el menú
+        except BaseException:
+          print("Error de señal")
     
+    #Función para mostrar menú al seleccionar archivo
+    def mostrar_menu_archivo(self,point): #esto es una prueba
+        index = self.arbol2.indexAt(point)
+        selected_path = str(self.arbol2.model().filePath(index))
+        pos_raton = QtGui.QCursor.pos() #  aqui obtenemos la posicion globlal del raton gracias al modulo QCursor de la libreria QtGui para poder aujustarla segun sea necesario
+        pos_menu  = QtCore.QPoint(pos_raton.x() + 10,pos_raton.y() + 0) #aqui ajustamos la posicion del menu contextual 10 pixeles a la derecha del raton que en este caso seria X y 0 pexeles hacia abajo del raton que en este caso seria y
+        menu_vista = QtWidgets.QMenu() # aqui se crea un una variable el objeto QMenu
+        accion_1 = menu_vista.addAction("encriptar")  # aquí se van agregando en una variable las acciones deseadas del menu para posteriormente utilizarlas con los metodos que queramos            accion_2 = menu_vista.addAction("Crear Archivo")
+        accion_2 = menu_vista.addAction("desencriptar")
+        accion_3 = menu_vista.addAction("Borrar")
+        accion_1.triggered.connect(lambda : self.ventana_contrasena(selected_path,True))
+        accion_2.triggered.connect(lambda : self.ventana_contrasena(selected_path))
+        accion_3.triggered.connect(lambda : self.borrar_directorio(selected_path))
+       
+        menu_vista.exec(pos_menu)
+        menu_vista.close() # Una vez elegida la opción cerramos el menú
+    
+    #Función para abrir clase/ventana para escribir y generar contraseña
+    def ventana_contrasena(self,ruta,cifrando = False):    
+        nuevo = contrasena(ruta,cifrando)
+        nuevo.exec()
+
     #Función para borrar archivos o carpetas
     def borrar_directorio(self,ruta):
         try:
-         
             if os.path.isfile(ruta):
                 os.remove(ruta)
             elif os.path.isdir(ruta):
                 shutil.rmtree(ruta)
-                
-
         except OSError:
             print("Error al borrar el directorio \n", OSError.strerror) #Mandamos un mensaje en consola e imprimimos el detalle del error
             #archivo.close()
@@ -195,18 +242,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         model.setNameFilters(filtro)#Añadimos el fltro recibido como lista
         model.setNameFilterDisables(False)#Activamos el filro
     
-    def crear_directorio(self,ruta_actual,nombre):#NO#Este método es para crear una nueva carpeta
-        try:
-           
-            self.newPath= os.path.join(ruta_actual, nombre) #Establecemos la ruta de la carpeta más el nombre de la misma en una variabel str
-            #print("cuadro: " ,self.txtDir.text())
-            #print("path: " ,self.modelo2.rootPath())
-            os.makedirs(self.newPath) #Creamos la carpeta con el método mkdirs() del módulo os con su número de modelo
-            #self.explorador_secundario(self.newPath)
-        except FileExistsError: #Se reconoce una excepeción el nombre de la carpeta ya existe
-            self.mensaje_error_directorio()
-  
-    #Funcion para crear un elemento (archivo o carpeta) //
+    #Funcion para crear un elemento (archivo o carpeta)
     def crear_elemento(self, ruta_actual, nombre):
         try:
             nueva_ruta = os.path.join(ruta_actual, nombre)
@@ -217,25 +253,23 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
                 self.modelo2.setRootPath(ruta_actual)
                 self.explorador_secundario(ruta_actual)
         except FileExistsError:
-            self.mensaje_error_directorio
+            #crear un mensaje de error al crear un directorio duplicado
+            mensaje = QtWidgets.QMessageBox(self)
+            mensaje.setWindowTitle("Error")
+            mensaje.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            mensaje.setText("Nombre de carpeta ya existe")
+            mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            mensaje.exec()
         #inicializa y devuelve una nueva instancia deQFileSystemModel. Después de crear un nuevo archivo o directorio, puede llamar a este
         #método para recrear el modelo y configurarlo como el modelo para su QTreeView
-    
-    #Función para crear un mensaje de error al crear un directorio duplicado        
-    def mensaje_error_directorio(self):
-        mensaje = QtWidgets.QMessageBox(self)
-        mensaje.setWindowTitle("Error")
-        mensaje.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-        mensaje.setText("Nombre de carpeta ya existe")
-        mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-        mensaje.exec()
-
+          
+    #Funcion para abrir la ventana de creación de carpeta
     def abrir_ventana(self):
-        self.creating_file = False #//
-        nuevo_directorio_dialog = NuevoDirectorio(self, self.creating_file) #//
+        self.creating_file = False 
+        nuevo_directorio_dialog = NuevoDirectorio(self, self.creating_file) 
         nuevo_directorio_dialog.exec()
     
-    #Funcion para abrir la ventana de creación de archivo //
+    #Funcion para abrir la ventana de creación de archivo
     def abrir_ventana_archivo(self):
         self.creating_file = True
         nuevo_directorio_dialog = NuevoDirectorio(self)
@@ -243,7 +277,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         
 #Clase para la ventana de creación de carpeta/archivo        
 class NuevoDirectorio(QtWidgets.QDialog):
-    def __init__(self,parent=None, creating_file = False) -> None: #//
+    def __init__(self,parent=None, creating_file = False) -> None:
         super(NuevoDirectorio,self).__init__(parent)
         uic.load_ui.loadUi("NuevoDirectorio.ui", self)
         self.cajaTexto = self.findChild(QtWidgets.QLineEdit, "txtNombreDir")
@@ -260,7 +294,7 @@ class NuevoDirectorio(QtWidgets.QDialog):
         try:
             assert nombre != ""
             assert nombre.find(" ") != 0
-            if isinstance(self.parent(), ExploradorDeArchivos):  # Check if the parent is of the right class
+            if isinstance(self.parent(), ExploradorDeArchivos):  #Chequeamos si la instancia es de la clase correcta
                 explorador = self.parent()
                 explorador.crear_elemento(explorador.txtDir.text(), nombre)
                 self.close()
@@ -271,10 +305,47 @@ class NuevoDirectorio(QtWidgets.QDialog):
     def mensaje_error_al_crear(self):
         mensaje = QtWidgets.QMessageBox(self)
         mensaje.setWindowTitle("Error")
+        #mensaje.setWindowIcon()
         mensaje.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         mensaje.setText("Nombre no válido")
         mensaje.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         mensaje.exec()        
+
+#Clase para la ventana de escribir contraseña
+class contrasena(QtWidgets.QDialog): # AGREGAR ESTO
+    def __init__(self, ruta, cifrando = False) -> None:
+        super(contrasena,self).__init__()
+        self.ui_path = os.path.dirname(__file__)
+        uic.load_ui.loadUi ("VentanaContraseña.ui", self)
+        
+        #Inicialización de Widgets de ventanas 
+        self.cajaTexto = self.findChild(QtWidgets.QLineEdit, "txtBusqueda")        
+        self.btnCancelar = self.findChild(QtWidgets.QPushButton, "btnCancelar")
+        self.btnCrear = self.findChild(QtWidgets.QPushButton, "btnBuscar")
+        
+        #Establecer función a botones
+        self.btnCrear.clicked.connect(self.generar_contrasena)
+        
+        #Convertir parámetros a variables de clase
+        self.ruta = ruta
+        self.cifrando = cifrando
+     
+    def generar_contrasena(self):
+        contrasena = self.cajaTexto.text()
+        if self.cifrando:      
+            #explorador = ExploradorDeArchivos()
+            #explorador.crear_llave(self.ruta, contrasena)
+            cifrado= crypt.cifrado_archivos()
+            cifrado.crear_llave(self.ruta,contrasena)
+            self.close()
+        else:
+             #explorador = ExploradorDeArchivos()
+             #explorador.cargar_llave(self.ruta,contrasena)
+            cifrado= crypt.cifrado_archivos()
+            cifrado.cargar_llave(self.ruta,contrasena)
+            self.close()
+             
+           
            
 def main():
     app = QApplication(sys.argv)
