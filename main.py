@@ -58,8 +58,10 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         #Configuración inical del explorador 
         self.explorador_rapido()
         self.explorador_secundario()
+        self.explorador_disco_local()
         self.arbol.clicked.connect(self.actualizar_explorador_secundario)
         self.arbol2.doubleClicked.connect(self.abrir_directorio)
+        self.arbol3.clicked.connect(self.actualizar_explorador_secundario)
         self.texto = None
         
         #Flag para inidicar si se está creando un archivo //
@@ -103,6 +105,9 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.arbol.hideColumn(2)
         self.arbol.hideColumn(3)
         self.filtro(modelo1,"")
+        
+        self.arbol.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
+        self.arbol.customContextMenuRequested.connect(self.mostrar_menu_general) #Mostrar el menu con click derecho
     
     #Función para configurar el explorador secundario (árbol derecho)     
     def explorador_secundario(self, ruta_2 = os.path.dirname(__file__) + '\\Raiz'):
@@ -133,6 +138,22 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         #self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
         #self.arbol2.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
 
+    #Función para configurar el explorador del disco local (árbol inferior izquierdo) 
+    def explorador_disco_local(self):
+        modelo3 = QFileSystemModel()
+        #Establecemos la ruta raiz por Default
+        modelo3.setRootPath('')
+        
+        self.arbol3 = self.findChild(QtWidgets.QTreeView, "arbol3")
+        self.arbol3.setModel(modelo3)
+        self.arbol3.hideColumn(1)
+        self.arbol3.hideColumn(2)
+        self.arbol3.hideColumn(3)
+        self.filtro(modelo3,"")
+        
+        self.arbol3.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
+        self.arbol3.customContextMenuRequested.connect(self.mostrar_menu_general)    
+    
     #Función para actualizar el explorador secundario al hacer click en una carpeta    
     def actualizar_explorador_secundario(self, index):
         ruta_nueva= self.modelo2.filePath(index)
