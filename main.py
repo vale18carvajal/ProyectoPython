@@ -205,7 +205,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
             texto += """Nombre Archivo: {0}
 Ruta Archivo: {1}
 _______________________________________________________________________________\r""".format(archivos.NomArchivo,archivos.Ruta)
-            
+        archivo.write(texto)    
         archivo.close()
         ventanaArchivo(ruta,texto).exec()
         
