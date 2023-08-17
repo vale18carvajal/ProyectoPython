@@ -79,23 +79,6 @@
      <normaloff>Iconos/eraser.png</normaloff>Iconos/eraser.png</iconset>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox">
-   <property name="geometry">
-    <rect>
-     <x>560</x>
-     <y>10</y>
-     <width>141</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Añadir Seguridad</string>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>Iconos/padlock.png</normaloff>Iconos/padlock.png</iconset>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections/>

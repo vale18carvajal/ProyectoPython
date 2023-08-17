@@ -77,16 +77,12 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         self.btnBuscar = self.findChild(QtWidgets.QPushButton,"btnBuscar")
         self.btnBuscar.clicked.connect(self.encontrar)
         self.txtBuscar = self.findChild(QtWidgets.QLineEdit,"txtBusqueda")
+        self.btnReporte = self.findChild(QtWidgets.QPushButton,"btnReporte")
+        self.btnReporte.clicked.connect(self.reporte_archivos)
 
-        #Varibles del encriptado de archivos
-        self.FIRMA = b"ENCRIPTADO" # AGREGAR ESTO
-        
         self.arbol2.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
         self.arbol2.customContextMenuRequested.connect(self.verificar_menu_directorio) #Mostrar el menu con click derecho
-        #self.arbol.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu) #Establecer señal de click derecho
-        #self.arbol.customContextMenuRequested.connect(self.mostrar_menu) #Mostrar el menu con click derecho
-
-        
+      
         
     #Función para configurar el explorador rápido (árbol izquierdo)
     def explorador_rapido(self):
@@ -185,6 +181,7 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
         except BaseException:
             archivo.close()   
     
+    #Función para buscar un archivo por nombre
     def encontrar(self): # AGREGAR ESTO 
         txt = self.txtBuscar.text() #aqui asignamos en una variable la palabra que pase el usuario para buscar
         mod= buscar.Rutas()
@@ -195,7 +192,23 @@ class ExploradorDeArchivos(QtWidgets.QDialog):
             self.explorador_secundario(encontrado)
         else: 
             self.txtBuscar.setText("")
+    
+    #Función para crear un reporte de archivos de la ruta raíz
+    def reporte_archivos(self):
+        mod= buscar.Rutas()
+        lista=mod.recorrer_directorios(self.ruta)
+        ruta = os.path.join(os.path.dirname(__file__),"reporte")
+        archivo = open(ruta, 'w')
+        texto=""
                
+        for archivos in lista:
+            texto += """Nombre Archivo: {0}
+Ruta Archivo: {1}
+_______________________________________________________________________________\r""".format(archivos.NomArchivo,archivos.Ruta)
+            
+        archivo.close()
+        ventanaArchivo(ruta,texto).exec()
+        
     #Función para mostrar tipo de menú
     def verificar_menu_directorio(self,point): #esto es una prueba
         index = self.arbol2.indexAt(point)
